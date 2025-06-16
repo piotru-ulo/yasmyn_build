@@ -99,7 +99,9 @@ export default function MainScreen({ navigation }) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            setTopicExpiration(new Date(data.expiresAt));
+            const expirationDate = new Date(data.expiresAt);
+            expirationDate.setHours(expirationDate.getHours() + 2);
+            setTopicExpiration(expirationDate);
             setTopic(data.topic);
         } catch (err: any) {
             Alert.alert('Error', err.message);
