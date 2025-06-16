@@ -9,9 +9,13 @@ import {
     Image,
     StyleSheet,
     Alert,
+    Platform,
+    ScrollView,
 } from "react-native";
-import {User} from "../Model";
+import {Post, User} from "../Model";
 import {API_BASE_URL} from "../constants";
+import PostTile from "../tiles/PostTile";
+import { fetchMyInfo } from "../utils";
 
 const API_URL = API_BASE_URL;
 
@@ -23,6 +27,26 @@ const MyProfile: React.FC = () => {
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
+    const [myPosts, setMyPosts] = useState<Post[]>([]);
+
+    const fetchMyPosts = async () => {
+        const authToken = await AsyncStorage.getItem("authToken");
+        if (!authToken) throw new Error("Authentication token is missing");
+
+        try {
+            const response = await fetch(`${API_URL}/me/posts`, {
+                method: "GET",
+                headers: {Authorization: `Bearer ${authToken}`},
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch user posts");
+
+            const posts: Post[] = await response.json();
+            setMyPosts(posts);
+        } catch (error) {
+            Alert.alert("Error", "Could not load your posts");
+        }
+    };
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -43,7 +67,9 @@ const MyProfile: React.FC = () => {
 
                     if (!res.ok) throw new Error("Search failed");
                     const users: User[] = await res.json();
-                    setSearchResults(users);
+                    const myId = await AsyncStorage.getItem("userId");
+                    const filteredUsers = users.filter(user => user.id.toString() !== myId);
+                    setSearchResults(filteredUsers);
                 } catch (error) {
                     console.error("Search error:", error);
                     setSearchResults([]);
@@ -58,33 +84,6 @@ const MyProfile: React.FC = () => {
         return () => clearTimeout(delayDebounce);
     }, [searchQuery]);
 
-
-    useEffect(() => {
-        console.log("Updated observed:", observed);
-    }, [observed]);
-
-    useEffect(() => {
-        console.log("Updated observing:", observing);
-    }, [observing]);
-
-    const fetchMyInfo = async () => {
-        const authToken = await AsyncStorage.getItem("authToken");
-        if (!authToken) throw new Error("Authentication token is missing");
-
-        try {
-            const response = await fetch(`${API_URL}/me`, {
-                method: "GET",
-                headers: {Authorization: `Bearer ${authToken}`},
-            });
-
-            if (!response.ok) throw new Error("Failed to fetch user info");
-
-            const userInfo: User = await response.json();
-            setMyInfo(userInfo);
-        } catch (error) {
-            Alert.alert("Error", "Could not load user info");
-        }
-    };
 
     const fetchObserved = async () => {
         const authToken = await AsyncStorage.getItem("authToken");
@@ -102,13 +101,9 @@ const MyProfile: React.FC = () => {
 
             if (!obsRes.ok || !ingRes.ok) throw new Error("Fetch failed");
 
-            // console.log("jsons: ", obsRes.json(), ingRes.json());
 
             const observedUsers: User[] = await obsRes.json();
             const observingUsers: User[] = await ingRes.json();
-
-            console.log("Observed users:", observedUsers);
-            console.log("Observing users:", observingUsers);
 
             setObserved(observedUsers);
             setObserving(observingUsers);
@@ -119,31 +114,10 @@ const MyProfile: React.FC = () => {
         }
     };
 
-    const searchUsersByUsername = async () => {
-        const authToken = await AsyncStorage.getItem("authToken");
-        if (!authToken) {
-            Alert.alert("Error", "No auth token");
-            return;
-        }
+    const updateMyInfo = async () => {
+        setMyInfo(await fetchMyInfo()?? null);
+    }
 
-        if (!newFriendId.trim()) return;
-
-        try {
-            const response = await fetch(`${API_URL}/users/search?username=${encodeURIComponent(newFriendId)}`, {
-                headers: {
-                    Authorization: `Bearer ${authToken}`,
-                },
-            });
-
-            if (!response.ok) throw new Error("Search failed");
-
-            const users: User[] = await response.json();
-            setSearchResults(users);
-        } catch (err) {
-            Alert.alert("Error", "Failed to search users");
-            console.error(err);
-        }
-    };
 
     const observeUserById = async (id: number) => {
         try {
@@ -168,7 +142,7 @@ const MyProfile: React.FC = () => {
             setSearchResults([]);
             setNewFriendId("");
             await fetchObserved();
-            await fetchMyInfo();
+            await updateMyInfo();
         } catch (error) {
             Alert.alert("Error", "Could not add observed user");
         }
@@ -190,7 +164,7 @@ const MyProfile: React.FC = () => {
             });
 
             await fetchObserved();
-            await fetchMyInfo();
+            await updateMyInfo();
         } catch {
             Alert.alert("Error", "Could not remove observed user");
         }
@@ -198,7 +172,8 @@ const MyProfile: React.FC = () => {
 
     useEffect(() => {
         fetchObserved();
-        fetchMyInfo();
+        fetchMyPosts();
+        updateMyInfo();
     }, []);
 
 
@@ -209,18 +184,37 @@ const MyProfile: React.FC = () => {
             </View>
         );
     }
-    
-    let imagePrefix = 'http://localhost:8080/uploads/';
 
+    let imagePrefix = API_BASE_URL+ '/uploads/';
+
+
+    const UserRow = ({
+                         user,
+                         buttonTitle,
+                         onButtonPress,
+                         buttonColor,
+                     }: {
+        user: typeof observed[0];
+        buttonTitle?: string;
+        onButtonPress?: (id: number) => void;
+        buttonColor?: string;
+    }) => (
+        <View style={styles.friendRow}>
+            <View style={styles.userInfo}>
+                <Image source={{uri: imagePrefix + user.imageUrl}} style={styles.friendImage}/>
+                <Text style={{marginLeft: 8}}>{user.username}</Text>
+            </View>
+            {buttonTitle && onButtonPress && (
+                <Button title={buttonTitle} onPress={() => onButtonPress(user.id)} color={buttonColor}/>
+            )}
+        </View>
+    );
 
     return (
         <View style={styles.container}>
             {/* Profile Info */}
             <View style={styles.profileContainer}>
-                <Image
-                    source={{uri: imagePrefix + myInfo.imageUrl}}
-                    style={styles.profileImage}
-                />
+                <Image source={{uri: imagePrefix + myInfo.imageUrl}} style={styles.profileImage}/>
                 <Text style={styles.profileName}>{myInfo.username}</Text>
                 <Text>
                     You observe {observed.length} {observed.length === 1 ? "user" : "users"}.
@@ -238,18 +232,12 @@ const MyProfile: React.FC = () => {
                     extraData={observed}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({item}) => (
-                        <View style={styles.friendRow}>
-                            <Text>{item.username}</Text>
-                            <Button
-                                title="Remove"
-                                onPress={() => removeObserved(item.id)}
-                                color="red"
-                            />
-                        </View>
+                        <UserRow user={item} buttonTitle="Remove" onButtonPress={removeObserved} buttonColor="red"/>
                     )}
                 />
             </View>
 
+            {/* Search Users */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Search Users by Username</Text>
                 <TextInput
@@ -264,15 +252,11 @@ const MyProfile: React.FC = () => {
                         data={searchResults}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={({item}) => (
-                            <View style={styles.friendRow}>
-                                <Text>{item.username}</Text>
-                                <Button title="Observe" onPress={() => observeUserById(item.id)}/>
-                            </View>
+                            <UserRow user={item} buttonTitle="Observe" onButtonPress={observeUserById}/>
                         )}
                     />
                 )}
             </View>
-
 
             {/* Observing List */}
             <View style={styles.section}>
@@ -281,15 +265,34 @@ const MyProfile: React.FC = () => {
                     data={observing}
                     extraData={observing}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({item}) => (
-                        <View style={styles.friendRow}>
-                            <Text>{item.username}</Text>
-                        </View>
-                    )}
+                    renderItem={({item}) => <UserRow user={item}/>}
                 />
             </View>
+
+            {/* User Posts List */}
+            {Platform.OS === "web" ? (
+                <ScrollView style={styles.webScroller}>
+                    {myPosts.map((post, i) => (
+                        <View key={post.id.toString()}>
+                            <PostTile post={post} disableLike/>
+                        </View>
+                    ))}
+                </ScrollView>
+            ) : (
+                <FlatList
+                    data={myPosts}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({item}) => (
+                        <View>
+                            <PostTile post={item} disableLike/>
+                        </View>
+                    )}
+                    contentContainerStyle={{paddingBottom: 20}}
+                />
+            )}
         </View>
     );
+
 };
 
 export default MyProfile;
@@ -332,7 +335,21 @@ const styles = StyleSheet.create({
     friendRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: "flex-start",
         paddingVertical: 6,
+    },
+    friendImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+    },
+    userInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 1,  // so username text doesn't push buttons off screen
+    },
+    webScroller: {
+        height: 100,
+        overflow: 'scroll',
     },
 });

@@ -15,6 +15,8 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useNavigation} from "@react-navigation/native";
 import {API_BASE_URL} from "../constants";
+import { fetchMyInfo } from '../utils';
+import { User } from '../Model';
 
 const { width } = Dimensions.get('window');
 const CIRCLE = 80;
@@ -38,7 +40,9 @@ async function uploadImage(imageUri: string, setImageUri: (uri: string | null) =
             } as any);
         }
 
-        const response = await fetch('https://yasmyn-production.up.railway.app/posts', {
+        const url = `${API_BASE_URL}/posts`;
+
+        const response = await fetch(url, {
             method: 'POST',
             body: formData,
             headers: {
@@ -79,6 +83,14 @@ export default function MainScreen({ navigation }) {
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [topicExpiration, setTopicExpiration] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [myInfo, setMyInfo] = useState<User | null>(null);
+
+    const updateMyInfo = async () => {
+        setMyInfo(await fetchMyInfo()?? null);  
+    }
+    useEffect(() => {
+        updateMyInfo();
+    }, []);
 
     const fetchTopic = async () => {
         try {
@@ -87,7 +99,7 @@ export default function MainScreen({ navigation }) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            setTopicExpiration(new Date(new Date(data.expiresAt).getTime() + 2 * 60 * 60 * 1000));
+            setTopicExpiration(new Date(data.expiresAt));
             setTopic(data.topic);
         } catch (err: any) {
             Alert.alert('Error', err.message);
@@ -157,6 +169,9 @@ export default function MainScreen({ navigation }) {
 };
 
 
+    let imagePrefix = API_BASE_URL + '/uploads/'
+
+
     return (
         <SafeAreaView style={styles.safe}>
             {/* HEADER */}
@@ -165,6 +180,8 @@ export default function MainScreen({ navigation }) {
                     style={styles.circleButton}
                     onPress={() => navigation.navigate("MyProfile")}
                 > 
+                    <Image source = {myInfo?.imageUrl ? { uri: imagePrefix + myInfo.imageUrl } : require("../assets/user.png")}
+                           style={styles.imageButton} />
                     <Text style={styles.circleText}>My{"\n"}Profile</Text>
                 </TouchableOpacity>
             </View>
