@@ -28,7 +28,7 @@ function parsePostDates(post: any) {
 
 async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStateAction<Post[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) {
     try {
-        const authToken = await AsyncStorage.getItem('authToken');
+        const authToken = localStorage.getItem('authToken');
 
         if (!authToken) {
             throw new Error('Authentication token is missing');

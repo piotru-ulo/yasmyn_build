@@ -16,7 +16,7 @@ export const showAlert = (title: string, message: string, onConfirm?: () => void
 };
 
 export const fetchMyInfo = async () => {
-        const authToken = await AsyncStorage.getItem("authToken");
+        const authToken = localStorage.getItem("authToken");
         if (!authToken) throw new Error("Authentication token is missing");
 
         try {

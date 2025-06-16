@@ -30,7 +30,7 @@ const MyProfile: React.FC = () => {
     const [myPosts, setMyPosts] = useState<Post[]>([]);
 
     const fetchMyPosts = async () => {
-        const authToken = await AsyncStorage.getItem("authToken");
+        const authToken = localStorage.getItem("authToken");
         if (!authToken) throw new Error("Authentication token is missing");
 
         try {
@@ -56,7 +56,7 @@ const MyProfile: React.FC = () => {
             }
 
             const fetchSearchResults = async () => {
-                const authToken = await AsyncStorage.getItem("authToken");
+                const authToken = localStorage.getItem("authToken");
                 if (!authToken) return;
 
                 try {
@@ -67,7 +67,7 @@ const MyProfile: React.FC = () => {
 
                     if (!res.ok) throw new Error("Search failed");
                     const users: User[] = await res.json();
-                    const myId = await AsyncStorage.getItem("userId");
+                    const myId = localStorage.getItem("userId");
                     const filteredUsers = users.filter(user => user.id.toString() !== myId);
                     setSearchResults(filteredUsers);
                 } catch (error) {
@@ -86,7 +86,7 @@ const MyProfile: React.FC = () => {
 
 
     const fetchObserved = async () => {
-        const authToken = await AsyncStorage.getItem("authToken");
+        const authToken = localStorage.getItem("authToken");
         if (!authToken) throw new Error("Authentication token is missing");
 
         try {
@@ -121,7 +121,7 @@ const MyProfile: React.FC = () => {
 
     const observeUserById = async (id: number) => {
         try {
-            const authToken = await AsyncStorage.getItem("authToken");
+            const authToken = localStorage.getItem("authToken");
             if (!authToken) throw new Error("Authentication token is missing");
 
             const response = await fetch(`${API_URL}/me/observe`, {
@@ -151,7 +151,7 @@ const MyProfile: React.FC = () => {
 
     const removeObserved = async (id: number) => {
         try {
-            const authToken = await AsyncStorage.getItem("authToken");
+            const authToken = localStorage.getItem("authToken");
             if (!authToken) throw new Error("Authentication token is missing");
 
             await fetch(`${API_URL}/me/observe`, {

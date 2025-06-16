@@ -28,7 +28,7 @@ function parsePostDates(post: any) {
 
 async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStateAction<Post[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, setTopic: React.Dispatch<React.SetStateAction<string | null>>) {
     try {
-        const authToken = await AsyncStorage.getItem('authToken');
+        const authToken = localStorage.getItem('authToken');
 
         if (!authToken) {
             throw new Error('Authentication token is missing');
@@ -83,7 +83,7 @@ const LeaderboardScreen = ({ navigation }) => {
         fetchEveryonesImages(setOthersPosts, setLoading, setTopic);
     }, []);
 
-    const authToken = AsyncStorage.getItem('authToken');
+    const authToken = localStorage.getItem('authToken');
     // if (!authToken)
 
     const renderItem = ({ item, index }: { item: Post, index: number }) => (

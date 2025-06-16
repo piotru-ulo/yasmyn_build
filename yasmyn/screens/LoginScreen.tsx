@@ -9,6 +9,10 @@ export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    if(localStorage.getItem('authToken')) {
+        navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    }
+
     const handleLogin = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -23,8 +27,8 @@ export default function LoginScreen({ navigation }) {
             const data = await response.json();
 
             if (response.ok && data.token) {
-                await AsyncStorage.setItem('authToken', data.token);
-                await AsyncStorage.setItem('userId', data.userId.toString());
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userId', data.userId.toString());
                 navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
             } else {
                 showAlert('Login failed', data.message || 'Invalid credentials');

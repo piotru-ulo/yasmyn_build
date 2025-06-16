@@ -23,7 +23,7 @@ const CIRCLE = 80;
 
 async function uploadImage(imageUri: string, setImageUri: (uri: string | null) => void) {
     try {
-        const authToken = await AsyncStorage.getItem('authToken');
+        const authToken = localStorage.getItem('authToken');
         if (!authToken) throw new Error('Authentication token is missing');
 
         const formData = new FormData();
