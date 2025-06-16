@@ -175,7 +175,10 @@ export default function MainScreen({ navigation }) {
 
 
     return (
+        <ScrollView style={{ flex: 1, overflow: 'scroll'}} >
         <SafeAreaView style={styles.safe}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+
             {/* HEADER */}
             <View style={styles.header}>
                 <TouchableOpacity 
@@ -219,7 +222,9 @@ export default function MainScreen({ navigation }) {
                     <Image source={require("../assets/friends.png")} style={styles.imageButton}/>
                 </TouchableOpacity>
             </View>
+            </ScrollView>
         </SafeAreaView>
+        </ScrollView>
     );
 }
 
@@ -256,10 +261,10 @@ const styles = StyleSheet.create({
         marginBottom: 20
     },
     imagePicker: {
-        width: width * 0.5,
-        height: height * 0.5,
-        maxWidth: 500,
-        maxHeight: 500,
+        width: width * 0.20,
+        height: width * 0.20,
+        maxWidth: 400,
+        maxHeight: 400,
         borderRadius: (width * 0.5) / 2,
         borderWidth: 2,
         borderColor: "#000",

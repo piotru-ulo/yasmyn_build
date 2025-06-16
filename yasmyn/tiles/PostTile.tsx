@@ -9,7 +9,7 @@ const API_URL = API_BASE_URL;
 
 const sendLike = async (postId: number, liked: boolean): Promise<boolean> => {
     try {
-        const authToken = await AsyncStorage.getItem('authToken');
+        const authToken = localStorage.getItem('authToken');
         if (!authToken) throw new Error('Authentication token is missing');
 
         const method = liked ? 'DELETE' : 'POST';
@@ -38,7 +38,7 @@ const sendLike = async (postId: number, liked: boolean): Promise<boolean> => {
 
 const observeUserById = async (id: number, setObserveDisabled: React.Dispatch<React.SetStateAction<boolean>>) => {
     try {
-        const authToken = await AsyncStorage.getItem("authToken");
+        const authToken = localStorage.getItem("authToken");
         if (!authToken) throw new Error("Authentication token is missing");
 
         const response = await fetch(`${API_URL}/me/observe`, {
@@ -62,7 +62,7 @@ const observeUserById = async (id: number, setObserveDisabled: React.Dispatch<Re
 };
 
 const fetchObserved = async (id: number, setObserveDisabled: (disabled: boolean) => void) => {
-    const authToken = await AsyncStorage.getItem("authToken");
+    const authToken = localStorage.getItem("authToken");
     if (!authToken) throw new Error("Authentication token is missing");
 
     try {
@@ -76,7 +76,7 @@ const fetchObserved = async (id: number, setObserveDisabled: (disabled: boolean)
 
 
         const observedUsers: User[] = await obsRes.json();
-        const myId = await AsyncStorage.getItem("userId");
+        const myId = localStorage.getItem("userId");
 
         if (observedUsers.some((user) => user.id === id) || id.toString() === myId) {
             setObserveDisabled(true);
