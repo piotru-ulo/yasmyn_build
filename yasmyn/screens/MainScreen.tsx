@@ -87,7 +87,7 @@ export default function MainScreen({ navigation }) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            setTopicExpiration(new Date(data.expiresAt));
+            setTopicExpiration(new Date(new Date(data.expiresAt).getTime() + 2 * 60 * 60 * 1000));
             setTopic(data.topic);
         } catch (err: any) {
             Alert.alert('Error', err.message);
