@@ -18,7 +18,7 @@ import {API_BASE_URL} from "../constants";
 import { fetchMyInfo } from '../utils';
 import { User } from '../Model';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const CIRCLE = 80;
 
 async function uploadImage(imageUri: string, setImageUri: (uri: string | null) => void) {
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     },
     imagePicker: {
         width: width * 0.5,
-        height: width * 0.5,
+        height: height * 0.5,
         maxWidth: 500,
         maxHeight: 500,
         borderRadius: (width * 0.5) / 2,
